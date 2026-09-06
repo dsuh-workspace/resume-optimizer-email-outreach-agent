@@ -1,0 +1,21 @@
+Company: Stripe
+Position: Associate Product Manager / New Grad APM
+Location: San Francisco, CA (Hybrid)
+
+About the Role:
+At Stripe, we are building economic infrastructure for the internet. We are looking for an Associate Product Manager to join our Product and Developer Platform team. You will partner closely with engineering, design, data science, and business operations to scope, launch, and scale high-impact developer tooling and AI-powered automation workflows.
+
+What You'll Do:
+- Drive product discovery and technical requirements for developer and workflow automation tools.
+- Work cross-functionally with engineering, go-to-market, and data teams to ship customer-facing features and improve platform reliability.
+- Analyze quantitative product metrics and qualitative customer feedback to identify friction points and prioritize high-ROI roadmap initiatives.
+- Build and prototype automated pipelines, AI workflows, and API integrations to solve developer bottlenecks.
+- Present strategic product proposals, KPI reports, and roadmap milestones to executive leadership and stakeholders.
+
+Qualifications & Requirements:
+- Bachelor's degree in Business, Computer Science, Data Science, or related quantitative field (Graduating 2025/2026).
+- Demonstrated experience in Python, SQL, REST APIs, or modern software development tools.
+- Strong analytical skills: ability to synthesize complex datasets (e.g., using Python, Pandas, or Excel) into actionable product strategies.
+- Experience with cross-functional leadership, project management, or student consulting/entrepreneurial initiatives.
+- Familiarity with AI agent architectures, LLM prompt engineering, or automation frameworks is a strong plus.
+- Exceptional written and verbal communication skills with the ability to articulate technical concepts to both engineering and business stakeholders.

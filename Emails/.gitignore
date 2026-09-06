@@ -1,0 +1,23 @@
+# Credentials and API keys
+.env
+client_secret.json
+token.json
+
+# Personal data
+DanielSuh_Resume.pdf
+contacts.csv
+
+# Python environments and caches
+.python/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# OS artifacts
+.DS_Store
+*/.DS_Store
+
+# Temporary draft generation scripts
+save_*.py
+

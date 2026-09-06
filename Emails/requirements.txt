@@ -1,0 +1,7 @@
+google-antigravity>=0.1.10
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+python-dotenv
+requests
+pydantic>=2.0

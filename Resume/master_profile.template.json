@@ -1,0 +1,139 @@
+{
+  "personal_info": {
+    "full_name": "Jane Doe",
+    "headline": "Business Administration & Data Science | AI Solutions Specialist",
+    "email": "jane.doe@example.com",
+    "phone": "555-010-9988",
+    "location": "San Francisco, CA",
+    "linkedin": "linkedin.com/in/janedoe",
+    "github": "github.com/janedoe",
+    "portfolio": ""
+  },
+  "education": [
+    {
+      "institution": "University / College Name",
+      "degree": "Bachelor of Science in Business Administration; Minor in Data Science",
+      "location": "San Francisco, CA",
+      "graduation_date": "May 2028",
+      "gpa": "3.80",
+      "honors": [
+        "Academic Merit Scholar: Multi-year scholarship recognizing academic excellence"
+      ],
+      "coursework": [
+        "Introduction to Business Analytics",
+        "Foundations of Data Science",
+        "Probability and Statistics for Business",
+        "Financial Accounting",
+        "Competitive Strategy"
+      ]
+    }
+  ],
+  "summary_bank": {
+    "general": "Results-oriented Business Administration & Data Science student with expertise in AI agent architectures, CRM automation, and data-driven growth strategies.",
+    "ai_consulting_product": "Technical and business-driven candidate experienced in designing autonomous AI multi-agent workflows, prompt engineering, and CRM automation.",
+    "sales_operations_growth": "Growth and business development specialist with a background in B2B lead generation, market segmentation, and financial modeling."
+  },
+  "experiences": [
+    {
+      "id": "exp_solutions_consultant",
+      "company": "NextGen Automation Lab",
+      "role": "AI Solutions Consultant",
+      "location": "San Francisco, CA",
+      "date_range": "May 2025 \u2013 Present",
+      "description": "Designing production AI multi-agent pipelines and lead qualification systems.",
+      "bullets": [
+        {
+          "text": "Saved **50 sales hours per week** by building an agentic pipeline to scrape, enrich, verify, clean, qualify, and send **120 personalized emails every day**.",
+          "tags": [
+            "python",
+            "ai_agents",
+            "automation",
+            "lead_generation",
+            "email_automation",
+            "sales_ops"
+          ],
+          "impact": "high"
+        },
+        {
+          "text": "Improved automated classification accuracy to **90%** by designing rigorous evaluation benchmarks and testing against a golden dataset.",
+          "tags": [
+            "python",
+            "benchmarking",
+            "evaluation",
+            "prompt_engineering",
+            "data_cleaning",
+            "ai_agents"
+          ],
+          "impact": "high"
+        },
+        {
+          "text": "Streamlined customer handoffs across 4 teams by deploying webhook integrations into CRM platforms.",
+          "tags": [
+            "crm",
+            "api_integration",
+            "automation",
+            "sales_ops",
+            "operations"
+          ],
+          "impact": "medium"
+        }
+      ]
+    },
+    {
+      "id": "exp_strategy_intern",
+      "company": "Apex Growth Partners",
+      "role": "Strategic Operations Intern",
+      "location": "San Francisco, CA",
+      "date_range": "January 2025 \u2013 May 2025",
+      "description": "B2B client engagement, market analysis, and CRM process automation.",
+      "bullets": [
+        {
+          "text": "Accelerated outbound lead qualification by **40%** through custom scripts and pipeline deduplication.",
+          "tags": [
+            "python",
+            "sql",
+            "lead_generation",
+            "b2b_sales",
+            "market_research"
+          ],
+          "impact": "high"
+        },
+        {
+          "text": "Conducted quantitative market segmentation across 200+ target enterprise accounts, identifying 3 key high-growth verticals.",
+          "tags": [
+            "market_research",
+            "financial_modeling",
+            "excel",
+            "b2b_strategy"
+          ],
+          "impact": "medium"
+        }
+      ]
+    }
+  ],
+  "skills": {
+    "technical_skills": [
+      "Python",
+      "SQL",
+      "Git & GitHub",
+      "REST APIs",
+      "AI Agents & Automation",
+      "LLM Prompt Engineering",
+      "Data Analysis (Pandas, NumPy)"
+    ],
+    "business_and_strategy": [
+      "B2B Sales Development",
+      "Market Research & Segmentation",
+      "Financial Modeling & Forecasting",
+      "Competitive Strategy",
+      "CRM & Pipeline Operations"
+    ],
+    "tools_and_platforms": [
+      "Gmail API",
+      "Hunter.io",
+      "Google Workspace / Sheets",
+      "Microsoft Excel",
+      "Linux / Bash"
+    ]
+  }
+}
