@@ -1,0 +1,6 @@
+#!/bin/zsh
+PROJECT_ROOT="${0:A:h:h:h:h}"
+cd -- "$PROJECT_ROOT" || exit 1
+if ! Emails/.python/python/bin/python3 scripts/launch_applypilot.py; then
+  open 'Launch ApplyPilot.command'
+fi

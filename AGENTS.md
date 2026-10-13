@@ -1,125 +1,106 @@
-# 🏛️ Multi-Agent System Manifest & Architecture (`AGENTS.md`)
+# Multi-Agent System Manifest & Architecture
 
-This repository powers **Daniel Suh's Autonomous Job Application Co-Pilot**. It is structured as a **Hierarchical Supervisor Multi-Agent System** that automates high-match resume tailoring and personalized recruiter outreach.
+This repository is Daniel Suh's job application preparation and recruiter outreach co-pilot. `copilot.py` coordinates specialized Python modules. The current operating policy is **Gmail drafts only**: Daniel reviews and sends messages himself.
 
----
+## Agent responsibilities
 
-## 👥 The 3-Tier Multi-Agent Hierarchy
+### Master Supervisor — `copilot.py`
 
-```mermaid
-flowchart TD
-    classDef supervisor fill:#FFF3E0,stroke:#E65100,stroke-width:3px,color:#B71C1C;
-    classDef worker1 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;
-    classDef worker2 fill:#EDE7F6,stroke:#512DA8,stroke-width:2px,color:#311B92;
-    classDef user fill:#E1F5FE,stroke:#0288D1,stroke-width:2px,color:#01579B;
+- Coordinate Resume Specialist → contact audit → Outreach & Email Specialist.
+- Keep resume achievements, outreach claims, attachments, and application records consistent.
+- Create a review packet with source evidence, verification provenance, email copy, and original Gmail draft creation snapshots.
+- Run regression suites before creating drafts in the full pipeline; fail if checks fail.
+- Read-only commands must not process pending follow-ups.
 
-    USER["👤 Daniel (Candidate / User)"]:::user <==>|Interactive Chat or CLI| SUP["👑 Master Job Search Co-Pilot (Supervisor)<br>(copilot.py)"]:::supervisor
+### Resume Specialist — `Resume/`
 
-    subgraph WORKERS ["Specialized Worker Subagents"]
-        SUP -->|1. Dispatches Job Description| W1["📄 Resume Specialist Agent<br>(Resume/)"]:::worker1
-        W1 -->|Returns Tailored PDF, ATS Score & Metric Brief| SUP
+- Use `master_profile.json` as the verified source of career facts. Never silently load the template when the profile is missing.
+- Tailor the four selected experiences, normally Autopilot Local, Asian American Christian Fellowship, Aroma Vault, and ClayThis. Keep existing experience-selection and consulting-bullet rules in `tailor.py`.
+- Require source references for each rewritten bullet and evidence for listed skills. Preserve the original source text in reports. Block unsupported numbers/units, wrong experience references, roles/dates, and unsupported qualifications before rendering.
+- Preserve EDUCATION → EXPERIENCE → SKILLS, the `phone | email | linkedin | github` header, and Times New Roman/serif styling. Require exactly one page after layout adjustments.
+- Check bottom whitespace as well as page count. Use bounded font and spacing adjustments to balance the page; do not add content just to fill space. Honor the renderer's layout-review failure and visually inspect the final PDF before delivery.
+- Save PDF, Markdown, HTML, JSON, and the tailoring report. Include a PDF checksum so attachment verification detects changed files.
+- After creating and verifying a resume for Daniel, open its output folder in macOS Finder with the final PDF selected (`open -R <final_pdf_path>`). This is a standing user preference; use the exact newly generated artifact path.
+- Call the weighted 45% technical / 30% business / 25% keywords result a **job-description match estimate**. Do not present it as an employer ATS score or hiring probability.
+- Automated checks do not prove every paraphrase's meaning. Keep originals and rewrites visible for human review.
 
-        SUP -->|2. Dispatches Strategic Brief + Recruiter Info| W2["✉️ Outreach & Email Specialist Agent<br>(Emails/)"]:::worker2
-        W2 -->|Returns Contact Email & Staged Gmail Draft| SUP
-        
-        SUP -->|3. Runs Continuous Verification| TST["🧪 Automated Unit Test Runner<br>(17/17 Passing Tests)"]:::worker1
-    end
+### Contact and Seniority Specialists — `Emails/`
 
-    SUP -->|Renders Final Application Packet Dashboard| USER
-```
+- Find role-appropriate hiring managers and recruiters, with seniority calibration for internships and early-career roles.
+- Treat discovery results as candidates until mailbox verification succeeds.
+- Require an explicit Hunter `valid`/`deliverable` result and score >= 50 before using discovered mailboxes. Direct user entries are allowed but labeled user-provided, never independently verified.
+- Never synthesize mailbox addresses or manufacture confidence scores. Syntax and DNS checks do not establish mailbox deliverability.
+- Record verification source, score/status, and date. Pause when verification is unavailable.
 
----
+### Outreach & Email Specialist — `Emails/`
 
-## 🎭 Agent Directory & Role Specifications
+- Read `email-agent-context.md` and `memory.md` for voice and preferences.
+- Create post-application follow-ups only, with the validated PDF for the exact company/role. Do not silently substitute a base resume or omit a required attachment.
+- Keep outreach numeric achievements grounded in the attached resume. Use subject `Following up: [Role Title] — Daniel Suh`.
+- Create Gmail drafts; never send automatically. The legacy `create_scheduled_send` wrapper also only creates a draft. `--send-due` and the direct-send helper are disabled.
+- Repeated operations reuse draft IDs. An uncertain API response leaves a pending registry entry and blocks duplicate creation until reconciled.
+- Start follow-up timing only from an actual Gmail `SENT` message timestamp. Prepare Touch 2 two business days later at 9:06 AM America/Los_Angeles. Skip weekends; holiday calendars are out of scope.
+- Check exact reply sender addresses. Additional outgoing messages or drafts are not incoming replies. Gmail inspection errors pause processing. Each recipient has a separate sequence.
 
-### 1. 👑 Master Supervisor Co-Pilot
-* **Entry Point:** [`copilot.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/copilot.py)
-* **Role:** Career Chief of Staff & Orchestrator.
-* **Responsibilities:**
-  - Manages user interactions (Interactive Guided Mode or headless CLI).
-  - Coordinates the sequence: Resume Specialist $\rightarrow$ Outreach Specialist $\rightarrow$ Test Runner.
-  - Maintains narrative consistency between the tailored resume and the outreach copy.
-  - Enforces the **Fail-Fast Policy** and displays the final summary dashboard.
+### Tracker and Notifications — `tracker.py`, `notifier.py`
 
----
+- Preserve application history and unrelated work. Use locks, atomic writes, and a prior-version backup. Corrupt history is a hard error, not an empty tracker.
+- Reuse applications by normalized company, role, and attempt label. A separate attempt requires explicit `--new-attempt LABEL`.
+- Treat legacy “Scheduled” records as unconfirmed until inspected in Gmail.
+- Keep dashboard states accurate: created draft, confirmed sent, awaiting follow-up, replied, or paused.
+- Desktop/audio notifications report actual outcomes, without implying automatic sending.
 
-### 2. 📄 Resume & ATS Specialist Worker
-* **Location:** [`Resume/`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Resume)
-* **Core Scripts:** [`tailor.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Resume/tailor.py), [`render_pdf.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Resume/render_pdf.py), [`generate_resume.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Resume/generate_resume.py)
-* **Knowledge Source:** [`Resume/master_profile.json`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Resume/master_profile.json) (Daniel's verified achievements, work history, metrics, and skills).
-* **Responsibilities:**
-  - **Dynamic Bullet Tailoring**: Dynamically selects the top 4 experiences/projects from `master_profile.json` aligned with the JD.
-  - **Google X-Y-Z Formatting**: Rewrites bullet points to highlight quantifiable business and technical impact.
-  - **Deterministic Mathematical ATS Scoring**: Computes composite score:
-    $$\text{Score} = \operatorname{round}(0.45 \times \text{Tech} + 0.30 \times \text{Biz} + 0.25 \times \text{Keywords})$$
-  - **1-Page PDF Geometry Validator**: Renders HTML/CSS via Headless Chrome and programmatically validates that the PDF is strictly **1 page**.
-  - **Artifact Output**: Saves timestamped output folders with `Daniel_Suh_Resume_<Company>.pdf`, `tailoring_report.md`, `resume.md`, `resume.html`, and `tailored_resume.json`.
+### Local Review Screen — `review_app.py`, `review_ui/`
 
----
+- Show saved PDFs, source evidence, contact verification records, and original draft snapshots together. Do not claim snapshots reflect later Gmail edits.
+- Manual bullet edits must pass the existing evidence and one-page PDF checks. Publish complete new packet versions atomically; preserve originals, master profile, tracker state, and existing Gmail attachments.
+- Reject stale source packets and unsupported metrics. Keep legacy packets without evidence/checksums view-only. Label the match estimate as not recalculated after manual editing.
+- Serve on loopback only. Keep packet paths constrained to local output, escape displayed content, and require session/CSRF checks. Resume review does not require Gmail authentication or make external API calls.
 
-### 3. 🧠 Seniority & Hierarchy Sanity Specialist Worker
-* **Location:** [`Emails/`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails)
-* **Core Script:** [`contact_auditor.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/contact_auditor.py)
-* **Responsibilities:**
-  - **Role Seniority Tier Classification**: Automatically identifies job seniority tier (`INTERNSHIP`, `NEW_GRAD`, `MID_LEVEL`, `EXECUTIVE`).
-  - **Decision-Maker Calibration**: Flags executives/partners who are too senior for student outreach; prioritizes Campus Recruiters (Priority 1 Gatekeepers) and Engagement Managers/Haas Alumni (Priority 2 Referrals).
-  - **API Credit Preservation**: Screens candidate pools *before* invoking Hunter.io to conserve API lookup credits.
-  - **Visual Sanity Audit Reporting**: Generates color-coded ratings (🟢 Optimal Gatekeeper, 🟢 Referral Target, 🟡 High-Level, 🔴 Too Senior).
+### ApplyPilot Chrome Application Autofill — `extension/`, `extension_api.py`, `extension_state.py`
 
----
+- Fill only user-selected fields on hosted Greenhouse and Lever pages from a validated, explicitly selected packet. Preserve populated values unless replacement is explicitly selected.
+- The user-invoked **Prepare application** flow on hosted Greenhouse authorizes eligible blank fields, matching validated resume selection/generation, and required written answers from the full verified profile. Preserve opt-outs; batch genuinely missing facts for user input. Model interpretation may select evidence, never authorize unknown facts. Keep optional essays untouched and leave final review/submission to Daniel.
+- Use the explicitly installed Chrome native connector for on-demand startup and authenticated connection; retain short-lived code pairing as an advanced fallback. Only the stable extension origin may invoke the narrow handshake. Revocation must disable the native grant too; never silently reauthorize it. Keep API keys and source data in Python. Use a separate authenticated extension API without weakening existing review-session checks.
+- Fill optional disclosures only from explicit user-provided application preferences, selected automatically when the user clicks Autofill. Never infer sensitive facts. With explicit saved authorization, fill clear recruitment-data and demographic-data processing consent only; revalidate wording and retained checked state. Keep mixed agreements, attestations, background-check/marketing permissions, credentials, unknown answers, and ambiguous controls manual. Never click Next or Submit or invoke submission APIs.
+- Use explicit cross-company personal-relationship answers. Route work-for/work-with questions to Python against the full master profile, including experiences omitted from a tailored resume. Only an explicit exhaustive-list preference authorizes answering No for absent employers; missing profiles and ambiguous entities remain unresolved. Company-specific compound answers require matching company and exact wording.
+- Draft written answers only on request using the configured Gemini service. Show evidence without an approval step; revalidate written answers at fill time, including restored or edited answers. Reject stale question, packet, page, or answer context. Validate metric frequency including daily/weekly/monthly/annual aliases and missing qualifiers.
+- Validate portal acknowledgement and retained field values. Report failed fills and provide manual upload fallback. No automatic tracker/Gmail/profile updates.
+- Keep unfinished posting-specific work locally for 30 days; restore written answers for automatic revalidation at fill time. Background jobs use idempotent requests, bounded concurrency, cancellation before publication, and restart diagnostics. Resume generation is resume-only and publishes complete validated packets; select validated prepared resumes directly and offer optional PDF/evidence preview.
+- Keep the macOS companion on-demand. Do not install a login task.
+- Test adapters against synthetic local forms. Run mapping and worker tests plus browser integration tests; do not fill live applications merely to test code. Report sandbox-blocked or skipped integration checks explicitly.
+- For the explicitly authorized Greenhouse generalization campaign, supervised live preparation is permitted on suitable applications after local regression checks. Keep private recovery/evidence, use normal panel controls, and never click Next or Submit. Require three fresh passes per acceptance form; this authorization does not enable unattended live testing.
 
-### 4. ✉️ Outreach & Recruiter Specialist Worker
-* **Location:** [`Emails/`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails)
-* **Core Scripts:** [`agent.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/agent.py), [`gmail_draft.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/gmail_draft.py), [`resume_finder.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/resume_finder.py)
-* **Knowledge Sources:**
-  - [`Emails/email-agent-context.md`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/email-agent-context.md) (Persona, voice, tone, signature).
-  - [`Emails/memory.md`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/memory.md) (Learned preferences and active context).
-  - [`Emails/skills/`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/skills) (Antigravity Skills).
-* **Responsibilities:**
-  - **Recruiter Email Discovery**: Resolves company domains and searches Hunter.io API.
-  - **Tailored Resume Bridge**: Auto-discovers and attaches the matching custom PDF from `Resume/output/`.
-  - **Multi-Touch Sequence Generation**:
-    - **Touch 1 (Next-Business-Day 9:00 AM Outreach)**: Scheduled to send at **9:00 AM on the next business day** (Monday if created Friday/weekend). Dynamic Gemini AI copy under 120 words with concrete metric citation matching the JD and standard subject: `Following up: [Role Title] — Daniel Suh`.
-    - **Touch 2 (2-Business-Day Threaded Nudge @ 9:03 AM)**: 100% deterministic short-nudge template sent in the same thread exactly **2 business days** after Touch 1 at **9:03 AM** (skipping weekends):
-      *"Following up in case my note below got buried, totally understand things get busy. Would still love the chance to connect if timing works on your end!"*
-  - **Gmail API Draft Staging**: Drafts only (never auto-sends) with RFC 2822 `In-Reply-To` and `threadId` chaining.
-  - **Reply Detection & Kill-Switch**: Inspects threads for incoming recruiter replies; aborts Touch 2 if a reply is detected.
+## Mandatory operating policies
 
----
+1. **Fail-Fast and no fabricated facts:** Missing critical data, verification, source evidence, or valid artifacts must stop the affected operation with a specific diagnostic. Do not substitute guesses.
+2. **Regression tests:** Code changes require corresponding tests in `Emails/test_emailer.py`, `Resume/test_resume.py`, or `test_copilot.py`. Execute the full suite. Tests must isolate application history, contact files, draft state, and external APIs.
+3. **Draft-only control:** No message-send API calls in supported application workflows. Daniel sends in Gmail. Installing the optional background job is a separate user-invoked action.
+4. **Signature:**
 
-## 🔒 Mandatory Operating Policies
-
-1. **🛑 Strict Fail-Fast & Zero-Hallucination Mandate**:
-   - If any critical data, metric, contact, or file is missing or fails validation, **never guess, forge, or fabricate**. Immediately halt execution and alert Daniel with the exact diagnostic issue.
-2. **🧪 Mandatory Unit Testing & Coverage**:
-   - Whenever any code changes or new features are introduced, corresponding unit tests must be added to [`Emails/test_emailer.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Emails/test_emailer.py), [`Resume/test_resume.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/Resume/test_resume.py), or [`test_copilot.py`](file:///Users/danielsuh/Documents/Coding%20Stuff/Job%20Applications/test_copilot.py) and executed to maintain a **100% pass rate**.
-3. **🔒 Draft-Only Safety Constraint**:
-   - Outbound emails are strictly created as Gmail drafts. Daniel maintains human-in-the-loop control to review drafts before sending.
-4. **🖋️ Standardized Signature Block**:
    ```text
    Thanks for your time,
    Daniel Suh
    linkedin.com/in/daniel-suh-994411297 | 661-476-8194
    ```
-5. **📬 Mandatory Pre-Flight Gmail Health Check**:
-   - Every pipeline invocation runs `verify_gmail_access()` at startup to validate token freshness, Google API connectivity, and compose permissions before executing resume tailoring or draft dispatching.
 
----
+5. **Gmail health:** Verify access before Gmail-dependent work. Resume-only generation remains available separately. Background tasks must not launch an interactive authorization flow.
+6. **Privacy:** Keep profiles, applications, credentials, token files, contact lists, local draft registries, and generated packets out of version control.
 
-## 🚀 Quick Command Reference
+## Common commands
+
+Run from this repository's actual location; do not hardcode old project paths.
 
 ```bash
-cd "/Users/danielsuh/Documents/Coding Stuff/Job Applications"
-
-# 1. Interactive Co-Pilot Mode (Recommended)
 Emails/.python/python/bin/python3 copilot.py
-
-# 2. Fast Direct CLI Run
-Emails/.python/python/bin/python3 copilot.py --file Resume/sample_jd.txt --recruiter "Sarah Jenkins"
-
-# 3. Inspect Gmail Thread for Replies
-Emails/.python/python/bin/python3 copilot.py --check-thread "<GMAIL_THREAD_ID>" --email "recruiter@company.com"
-
-# 4. Run Automated Unit Test Suites
+Emails/.python/python/bin/python3 copilot.py --file Resume/sample_jd.txt
+Emails/.python/python/bin/python3 copilot.py --outreach "Alex Smith" --company "Company" --role "Role"
+Emails/.python/python/bin/python3 copilot.py --auto-nudge
+Emails/.python/python/bin/python3 copilot.py --tracker
+Emails/.python/python/bin/python3 copilot.py --review
+Emails/.python/python/bin/python3 copilot.py --check-thread "THREAD_ID" --email "person@company.org"
 Emails/.python/python/bin/python3 copilot.py --test-only
+bash scripts/setup_daily_nudge_daemon.sh --dry-run
 ```
+
+The optional background checker runs once successfully per weekday from 9:10 AM Pacific, using a five-minute retry/catch-up interval. Configuration paths are derived from the project location. Never install it merely to inspect or test the configuration.

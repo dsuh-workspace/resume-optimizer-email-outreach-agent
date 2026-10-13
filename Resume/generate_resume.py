@@ -10,35 +10,29 @@ Usage:
 import os
 import sys
 import json
+import hashlib
 import argparse
 import datetime
-import re
 from pathlib import Path
 
 # Local imports
 SCRIPT_DIR = Path(__file__).parent.resolve()
 from tailor import tailor_resume, generate_report_markdown, get_genai_client
-from render_pdf import save_resume_artifacts
+from publication import staged_packet, publish_packet
+from render_pdf import save_resume_artifacts, clean_file_name
 
 def load_master_profile(profile_path="master_profile.json"):
     path = Path(profile_path)
     if not path.is_absolute():
         path = SCRIPT_DIR / path
     if not path.exists():
-        template_path = SCRIPT_DIR / "master_profile.template.json"
-        if template_path.exists():
-            print(f"ℹ️  Notice: '{path.name}' not found. Loading template '{template_path.name}'...")
-            path = template_path
-        else:
-            raise FileNotFoundError(f"Master profile not found at: {path}")
+        raise FileNotFoundError(f"Verified master profile missing: {path}")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def clean_folder_name(name):
-    """Sanitizes text for safe directory naming."""
-    return re.sub(r'[^a-zA-Z0-9_\-]', '_', name.strip()).strip('_')
 
-def run_pipeline(jd_text, profile_path="master_profile.json", output_base_dir="output", target_pages=1):
+def run_pipeline(jd_text, profile_path="master_profile.json", output_base_dir=None, target_pages=1,
+                 *, target_company=None, target_role=None, preserve_source_bullets=False):
     """Main orchestration function."""
     print("=" * 65)
     print("🚀 Starting AI Resume Tailoring Pipeline")
@@ -53,7 +47,10 @@ def run_pipeline(jd_text, profile_path="master_profile.json", output_base_dir="o
     # 2. Tailor Resume via Gemini
     print("🧠 Analyzing Job Description & Tailoring Experience via Gemini AI...")
     client = get_genai_client()
-    tailored_data = tailor_resume(master_profile, jd_text, client=client, target_pages=target_pages)
+    identity = {} if target_company is None and target_role is None else {'target_company': target_company, 'target_role': target_role}
+    if preserve_source_bullets:
+        identity['preserve_source_bullets'] = True
+    tailored_data = tailor_resume(master_profile, jd_text, client=client, target_pages=target_pages, **identity)
 
     report_data = tailored_data.get("tailoring_report", {})
     company = report_data.get("target_company", "Target_Company")
@@ -64,28 +61,22 @@ def run_pipeline(jd_text, profile_path="master_profile.json", output_base_dir="o
     biz_s = breakdown.get("business_skills_score", "N/A")
     kw_s = breakdown.get("keyword_coverage_score", "N/A")
 
-    print(f"🎯 Target Target: {role} at {company}")
-    print(f"📊 ATS Match Score: {ats_score}/100 (Tech: {tech_s}% | Biz: {biz_s}% | Keywords: {kw_s}%)")
+    print(f"🎯 Target Role: {role} at {company}")
+    print(f"📊 Job-description Match Estimate: {ats_score}/100 (Tech: {tech_s}% | Biz: {biz_s}% | Keywords: {kw_s}%)")
 
     # 3. Create Output Directory
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    folder_name = f"{clean_folder_name(company)}_{clean_folder_name(role)}_{timestamp}"
-    out_dir = os.path.join(output_base_dir, folder_name)
-    os.makedirs(out_dir, exist_ok=True)
-
-    # 4. Render HTML, Markdown, and PDF
-    print("📄 Rendering ATS-Optimized HTML, Markdown, and Headless Chrome PDF...")
-    artifacts = save_resume_artifacts(tailored_data, out_dir)
-
-    # 5. Save Tailoring Report & JSON
-    report_md = generate_report_markdown(report_data)
-    report_path = os.path.join(out_dir, "tailoring_report.md")
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write(report_md)
-
-    json_path = os.path.join(out_dir, "tailored_resume.json")
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(tailored_data, f, indent=2)
+    folder_name = f"{clean_file_name(company)}_{clean_file_name(role)}_{timestamp}"
+    with staged_packet(output_base_dir if output_base_dir is not None else SCRIPT_DIR / 'output', folder_name) as (stage, destination):
+        print("📄 Rendering resume artifacts...")
+        artifacts = save_resume_artifacts(tailored_data, stage)
+        tailored_data["artifact_sha256"] = hashlib.sha256(Path(artifacts["pdf"]).read_bytes()).hexdigest()
+        (stage / "tailoring_report.md").write_text(generate_report_markdown(report_data), encoding='utf-8')
+        (stage / "tailored_resume.json").write_text(json.dumps(tailored_data, indent=2), encoding='utf-8')
+        publish_packet(stage, destination)
+        artifacts = {key: str(destination / Path(value).name) if key in ('pdf', 'md', 'html') else value for key, value in artifacts.items()}
+    out_dir = str(destination)
+    report_path = str(destination / 'tailoring_report.md')
 
     print("\n" + "=" * 65)
     print("✅ SUCCESS! Tailored Resume Pack Generated:")
@@ -93,7 +84,7 @@ def run_pipeline(jd_text, profile_path="master_profile.json", output_base_dir="o
     print(f"📌 PDF Resume:         {os.path.abspath(artifacts['pdf'])}")
     print(f"📝 Markdown Resume:    {os.path.abspath(artifacts['md'])}")
     print(f"🌐 HTML Resume:        {os.path.abspath(artifacts['html'])}")
-    print(f"📊 ATS Match Report:   {os.path.abspath(report_path)}")
+    print(f"📊 Job-description Match Report:   {os.path.abspath(report_path)}")
     print(f"📁 Full Output Folder: {os.path.abspath(out_dir)}")
     print("=" * 65)
 
@@ -158,7 +149,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate tailored, ATS-optimized PDF and Markdown resumes for job descriptions.")
     parser.add_argument("--jd", type=str, help="Path to job description text file or raw JD string")
     parser.add_argument("--profile", type=str, default="master_profile.json", help="Path to master profile JSON (default: master_profile.json)")
-    parser.add_argument("--output-dir", type=str, default="output", help="Base output directory (default: output)")
+    parser.add_argument("--output-dir", type=str, default=None, help="Base output directory (default: private Resume/output)")
     parser.add_argument("--pages", type=int, default=1, help="Target resume page length (default: 1)")
     parser.add_argument("--interactive", "-i", action="store_true", help="Launch interactive prompt mode")
 

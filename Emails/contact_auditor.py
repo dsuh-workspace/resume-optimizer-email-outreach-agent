@@ -64,12 +64,20 @@ def audit_candidate_seniority(candidate: Dict[str, Any], seniority_tier: str, co
     # Keywords classification
     exec_titles = ["partner", "managing director", "global head", "practice head", "vp", "vice president", "president", "chief", "founder", "c-level"]
     campus_rec_titles = ["campus", "university", "early career", "undergraduate", "emerging talent", "student", "recruiter", "talent acquisition"]
-    peer_titles = ["engagement manager", "consultant", "senior consultant", "associate", "analyst", "product manager", "engineer", "lead", "specialist"]
+    # Narrowed for INTERNSHIP/NEW_GRAD: only roles with plausible intern-pipeline access.
+    # Generic engineers, specialists, and leads rarely have insight into or influence over intern headcount.
+    peer_titles_intern = ["engagement manager", "associate", "analyst", "apm", "rotational", "program manager"]
+    # For MID_LEVEL: broader peer set is appropriate
+    peer_titles_midlevel = ["engagement manager", "consultant", "senior consultant", "associate", "analyst",
+                            "product manager", "engineer", "lead", "specialist"]
 
     is_exec = any(t in pos_lower for t in exec_titles)
     is_campus_rec = any(t in pos_lower for t in ["campus", "university", "early career", "undergraduate", "emerging talent"])
     is_general_rec = any(t in pos_lower for t in ["recruiter", "talent", "hr", "sourcer", "staffing"])
-    is_peer = any(t in pos_lower for t in peer_titles) and not is_exec and not is_general_rec
+
+    # Use the appropriate peer list based on tier context (set during audit)
+    active_peer_titles = peer_titles_intern if seniority_tier in ["INTERNSHIP", "NEW_GRAD"] else peer_titles_midlevel
+    is_peer = any(t in pos_lower for t in active_peer_titles) and not is_exec and not is_general_rec
 
     if seniority_tier in ["INTERNSHIP", "NEW_GRAD"]:
         if is_exec:

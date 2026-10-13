@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "ApplyPilot",
+  "version": "0.9.2",
+  "description": "Evidence-backed application autofill with your tailored resume. Fill clear answers, resolve ambiguous questions, and submit yourself.",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "sidePanel",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Open ApplyPilot",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; connect-src http://127.0.0.1:*; frame-src 'self' blob:"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArAnjdaWbllh91nRkEURdMPbtekmsCB4O0nOfXyBe11+086PoojK/LvO2Q/a/c3LLH9zSTL1suVIDG+qEW0TCe5yn+i9B9vjellzd2wAjdxliv111xyk6qOWMeFt38ThzcRpst4/0A9vpUR+eAIPeNTKA3PGgS9VlFyh3XQmwugtKlgVL4jrjIfqPwlWZ9eKjJUd1rbD93xHihJFIc7uBdIzXxAfu1EnMrcav3NsaoaxTQeh9vDL1vQ/Y/JxbBixHVU5SaV8ZkX7muDrtD8MC+ebiE5s19GSyZODCgFRcrjm95uTo6J0nLH9Oa66sfSytcxs0qF4AMT9iB97EanMpLwIDAQAB"
+}

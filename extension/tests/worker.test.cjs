@@ -1,0 +1,60 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const directory=path.join(__dirname,'..');
+const id='a'.repeat(32), local={server:'http://127.0.0.1:8765',token:'test-token'}, calls=[];
+let contentVersion=require('../manifest.json').version, activeId=7, preferenceName='Daniel', contextCompany='Example', revision='v1', listener, nativeCalls=0, nativeError=null;
+let testFields=null,testPreferences=null,testResolved=null;
+function boot(){
+  const storage=values=>({setAccessLevel:async o=>{assert.equal(o.accessLevel,'TRUSTED_CONTEXTS');},get:async keys=>Object.fromEntries(keys.map(k=>[k,values[k]])),set:async obj=>Object.assign(values,obj),remove:async k=>delete values[k],clear:async()=>{}});
+  const chrome={storage:{local:storage(local),session:storage({})},runtime:{id,getManifest:()=>({version:require('../manifest.json').version}),sendNativeMessage:async(host,message)=>{nativeCalls++;assert.equal(host,'com.applypilot.companion');assert.equal(message.action,'connect');assert.equal(message.version,1);if(nativeError)throw new Error(nativeError);return {version:1,server:'http://127.0.0.1:8765',token:'native-token'};},getURL:p=>'chrome-extension://'+id+'/'+p,onMessage:{addListener:fn=>listener=fn}},action:{onClicked:{addListener:()=>{}}},sidePanel:{open:async()=>{}},tabs:{query:async()=>[{id:activeId,url:'https://jobs.lever.co/example/123/apply'}]},scripting:{executeScript:async request=>{calls.push(request);if(request.func?.toString().includes('ApplicationAutofill.context'))return [{result:{version:contentVersion,url:'https://jobs.lever.co/example/123/apply',company:contextCompany,scanId:'scan',fields:testFields||[{id:'field-0',label:'Full name',type:'text'}]}}];if(request.args?.[0]?.version===1)return [{result:{supported:true,url:'https://jobs.lever.co/example/123/apply',company:'Example',fields:[{id:'history',label:'Have you worked for us?'}]}}];return [{result:[{id:'field-0',status:'filled'}]}];}}};
+  const context=vm.createContext({chrome,crypto:require('node:crypto').webcrypto,URL,AbortSignal,console,fetch:async(url,options)=>{
+    calls.push({url,options});assert.equal(options.headers['X-Extension-Id'],id);
+    if(url.endsWith('/preferences'))return {ok:true,json:async()=>testPreferences||({policy:{version:1},application_profile:{automation:{demographic_consent:true}}})};
+    if(url.endsWith('/resolve-fields'))return {ok:true,json:async()=>testResolved||({history:{value:'No',source:'Full master profile checked'}})};
+    if(url.endsWith('/packet')) {const data=JSON.parse(options.body);return {ok:data.revision===revision,json:async()=>data.revision===revision?{company:'Example',personal_info:{full_name:preferenceName},pdf_name:'Sample.pdf',pdf_base64:'JVBERg=='}:{error:'Resume changed'}};}
+    return {ok:true,json:async()=>[]};
+  }});
+  context.importScripts=file=>vm.runInContext(fs.readFileSync(path.join(directory,file),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(directory,'background.js'),'utf8'),context);
+}
+const sender={id,url:'chrome-extension://'+id+'/panel.html'};
+const send=(message,who=sender)=>new Promise(resolve=>{const result=listener(message,who,resolve);if(result===false)resolve({rejected:true});});
+(async()=>{
+  boot();
+  assert.equal((await send({action:'api',route:'/packets'},{id,url:'https://jobs.lever.co/x',tab:{id:7}})).rejected,true);
+  assert.equal((await send({action:'api',route:'/send'})).error,'Unknown endpoint.');
+  const fill={action:'fill',tabId:7,url:'https://jobs.lever.co/example/123/apply',packetId:'packet',revision:'v1',scanId:'scan',changes:[{id:'field-0',value:'Daniel',source:'profile'}],company:'Example',attach:false};
+  assert.ok((await send(fill)).result);assert.ok(calls.some(c=>c.url?.endsWith('/packet')));
+  assert.equal(calls.find(c=>c.args?.[0]?.scanId==='scan').args[0].automation.demographic_consent,true,'Consent authorization comes from fresh preferences');
+  contentVersion='0.6.0';calls.length=0;assert.match((await send(fill)).error,/refresh the application tab/);assert.ok(!calls.some(c=>c.args?.[0]?.changes));contentVersion=require('../manifest.json').version;
+  calls.length=0;preferenceName='Changed';await send(fill);
+  const invalidated=calls.find(c=>c.args?.[0]?.scanId==='scan').args[0];assert.equal(invalidated.changes.length,0);assert.equal(invalidated.accounting[0].status,'invalidated','Changed profile is withheld');
+  preferenceName='Daniel';contextCompany='Other';calls.length=0;assert.match((await send(fill)).error,/Company context changed/);assert.ok(!calls.some(c=>c.args?.[0]?.changes));contextCompany='Example';
+  const scan=(await send({action:'scan',tabId:7})).result;assert.equal(scan.fields[0].resolution.value,'No');assert.ok(calls.some(c=>c.url?.endsWith('/resolve-fields')),'History resolves in Python');
+  calls.length=0;revision='v2';assert.equal((await send(fill)).error,'Resume changed');assert.equal(calls.filter(c=>c.target).length,0);
+  revision='v1';activeId=9;calls.length=0;assert.match((await send(fill)).error,/Active tab changed/);assert.equal(calls.length,0);
+  activeId=7;boot();calls.length=0;assert.ok((await send(fill)).result);assert.ok(calls.some(c=>c.url?.endsWith('/packet')),'Restart revalidates packet');
+  testFields=[{id:'field-0',label:'Have you ever worked for Robinhood?',type:'combobox'}];
+  testPreferences={policy:require('../field-policy.json'),application_profile:{}};
+  testResolved={'field-0':{value:'No',alternatives:['I have never worked at Robinhood'],source:'Full master profile checked'}};
+  const historyFill={...fill,changes:[{id:'field-0',value:'No',source:'profile',alternatives:['I am a former employee']}]};
+  boot();calls.length=0;await send(historyFill);
+  let sent=calls.find(c=>c.args?.[0]?.changes).args[0];assert.deepEqual(Array.from(sent.changes[0].alternatives),['I have never worked at Robinhood'],'Worker restart forwards only fresh Python alternatives');
+  testResolved={'field-0':{value:'No',source:'Matching employment ended'}};calls.length=0;await send(historyFill);sent=calls.find(c=>c.args?.[0]?.changes).args[0];assert.equal(sent.changes[0].alternatives,undefined,'Current No never reuses preview never-employed alternative');
+  testFields=[{id:'field-0',label:'Gender',type:'select',options:[{label:'Cisgender man',value:'m'}]}];
+  testResolved={'field-0':{value:'Cisgender man',source:'Explicit company answer'}};
+  const detailFill={...fill,changes:[{id:'field-0',value:'Cisgender man',source:'explicit'}]};
+  boot();calls.length=0;await send(detailFill);assert.equal(calls.find(c=>c.args?.[0]?.changes).args[0].changes.length,1,'Saved scoped choice revalidated after restart');
+  testResolved={};testPreferences.application_profile.disclosures={gender:'Male'};calls.length=0;await send(detailFill);assert.equal(calls.find(c=>c.args?.[0]?.changes).args[0].changes.length,0,'Removed scoped preference cannot fall back to cisgender from Male');
+  testResolved={'field-0':{value:'Cisgender man'}};testFields[0].options=[{label:'Cisgender woman',value:'f'}];calls.length=0;await send(detailFill);assert.equal(calls.find(c=>c.args?.[0]?.changes).args[0].changes.length,0,'Removed choice invalidates saved answer');
+  testFields=[{id:'field-0',label:'Email',type:'email',subject:'third_party',section:'Emergency contact',contextVersion:2}];testResolved={};calls.length=0;
+  await send({...fill,changes:[{id:'field-0',value:'wrong@example.test',source:'once'}]});
+  assert.equal(calls.find(c=>c.args?.[0]?.changes).args[0].changes.length,0,'One-time answers cannot bypass third-party isolation');
+  testFields=null;testPreferences=null;testResolved=null;
+  assert.equal((await send({action:'settings'})).result.paired,true);assert.equal(local.token,'native-token');assert.equal(nativeCalls,1);
+  await send({action:'disconnect'});assert.match((await send({action:'api',route:'/packets'})).error,/Pair/);
+  await send({action:'settings'});assert.equal(nativeCalls,1,'Disconnect does not silently reconnect');
+  await send({action:'connect'});assert.equal(nativeCalls,2);assert.equal(local.token,'native-token');
+  await send({action:'disconnect'});nativeError='Connection is disabled';const failed=await send({action:'connect'});assert.equal(failed.result.paired,false);assert.equal(failed.result.connectionError,nativeError);
+  assert.equal((await send({action:'connect'},{id,url:'https://jobs.lever.co/x',tab:{id:7}})).rejected,true);
+  console.log('PASS: worker sender validation, endpoint restrictions, stale revisions, tab switching, restart, and disconnect');
+})().catch(e=>{console.error(e);process.exitCode=1;});

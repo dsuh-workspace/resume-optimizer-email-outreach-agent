@@ -1,11 +1,11 @@
 ---
 name: Quick Bump Follow-up
-description: Instructions and templates for a quick follow-up bump email sent 2 business days after initial outreach at 9:03 AM if no response is received.
+description: Instructions and templates for a quick follow-up bump email drafted 2 business days after Gmail confirms the initial outreach was sent at 9:06 AM Pacific if no response is received.
 ---
 
-# Quick Bump Follow-up (Touch 2: 2-Business-Day Threaded Nudge @ 9:03 AM)
+# Quick Bump Follow-up (Touch 2: 2-Business-Day Threaded Nudge @ 9:06 AM Pacific)
 
-Use this skill to draft a concise, warm "nudge" reply sent in the **same email thread** 2 business days after Touch 1 (at 9:03 AM) if no response is received.
+Use this skill to draft a concise, warm "nudge" reply sent in the **same email thread** 2 business days after Touch 1 (at 9:06 AM Pacific) if no response is received.
 
 ## Mandatory Guidelines
 
@@ -39,3 +39,4 @@ Thanks for your time,
 Daniel Suh
 linkedin.com/in/daniel-suh-994411297 | 661-476-8194
 ```
+Only create a draft. An actual Gmail SENT message starts the clock; an unsent draft does not. Inspection errors pause processing, and a confirmed reply cancels that recipient's sequence.

@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Synthetic Lever test</title></head><body>
+<div class="posting-headline"><h2>Example Product Analyst</h2></div><div class="section-wrapper">Build analytics products for a synthetic employer.</div>
+<form id="application"><div class="application-question"><label for="first">First name</label><input id="first"></div>
+<div class="application-question"><label for="email">Email</label><input id="email" type="email" value="existing@example.org"></div>
+<div class="application-question"><label for="country">Country</label><select id="country"><option value="">Choose</option><option value="US">United States</option></select></div>
+<div data-employment><div class="application-question"><label for="company">Company</label><input id="company"></div><div class="application-question"><label for="desc">Description</label><textarea id="desc"></textarea></div></div>
+<div class="application-question"><label for="why">Why this role?</label><textarea id="why" maxlength="250"></textarea></div>
+<div class="application-question"><label for="gender">Gender</label><input id="gender"></div>
+<div class="application-question" id="upload"><label for="resume">Resume</label><input id="resume" type="file" accept=".pdf"><span id="receipt"></span></div>
+<div class="application-question"><label for="custom">Current location</label><input id="custom" role="combobox" aria-controls="places"><div id="places" role="listbox" hidden><div role="option">Berkeley</div></div></div>
+<button type="submit" id="submit">Submit application</button></form><pre id="results">RUNNING</pre>
+<script src="../core.js"></script><script src="../content.js"></script><script src="browser.test.js"></script></body></html>

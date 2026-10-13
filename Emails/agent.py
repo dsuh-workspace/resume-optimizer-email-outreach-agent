@@ -9,7 +9,9 @@ from typing import Optional, Tuple, Dict, Any
 from dotenv import load_dotenv
 from google.antigravity import Agent, LocalAgentConfig, CapabilitiesConfig
 from gmail_draft import create_gmail_draft
-from resume_finder import find_tailored_resume
+from reliability_store import application_operation_key
+from resume_finder import find_tailored_resume, load_verified_packet
+from email_validator import contact_verification, is_valid_email, validate_email, sanitize_and_validate_email, verify_email_with_hunter
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -89,8 +91,15 @@ def find_email_via_hunter(first_name: str, last_name: str, company_name: str) ->
             data = response.json()
             email = data.get("data", {}).get("email")
             score = data.get("data", {}).get("score")
+            verification = data.get("data", {}).get("verification") or {}
+            v_status = verification.get("status")
+
             if email:
-                print(f"Hunter.io found email: {email} (Confidence Score: {score}%)")
+                is_valid, reason = validate_email(email, hunter_api_key=HUNTER_API_KEY, target_company=company_name)
+                if not is_valid or v_status == "invalid" or score is None or score < 50:
+                    print(f"⚠️ Hunter.io email '{email}' rejected: {reason if not is_valid else 'verification status is invalid'}")
+                    return None, None
+                print(f"Hunter.io found verified valid email: {email} (Confidence Score: {score}%)")
                 return email, score
             else:
                 print(f"Hunter.io could not find a verified email for {first_name} {last_name} at {domain}.")
@@ -128,7 +137,7 @@ def search_company_contacts_via_hunter(company_name: str, role_title: str = "") 
     params = {
         "domain": domain,
         "api_key": HUNTER_API_KEY,
-        "limit": 15
+        "limit": 100  # Increased from 15 — large companies need wider coverage
     }
 
     try:
@@ -138,12 +147,22 @@ def search_company_contacts_via_hunter(company_name: str, role_title: str = "") 
 
         data = response.json()
         emails_list = data.get("data", {}).get("emails", [])
-        
-        hm_keywords = ["head", "vp", "director", "lead", "manager", "principal", "chief", "founder"]
-        recruiter_keywords = ["recruiter", "talent", "hr", "people", "sourcer", "acquisition", "staffing"]
+
+        # Tiered HM scoring — consistent with contact_finder.py
+        HM_TITLE_SCORES = {
+            "head of": 55, "vice president": 50, "vp": 50, "director": 45,
+            "group product manager": 45, "principal": 40, "senior manager": 35,
+            "manager": 20, "lead": 8,
+        }
+        recruiter_keywords = ["campus recruiter", "university recruiter", "early career",
+                              "emerging talent", "talent acquisition", "recruiter",
+                              "hr", "sourcer", "staffing", "people"]
 
         # Extract role domain words (e.g. 'product' from 'Associate Product Manager')
-        role_terms = [w.lower() for w in re.split(r'\W+', role_title) if len(w) > 3 and w.lower() not in ["associate", "senior", "specialist", "junior", "lead", "manager", "intern", "coop"]]
+        role_terms = [w.lower() for w in re.split(r'\W+', role_title)
+                      if len(w) > 3 and w.lower() not in
+                      {"associate", "senior", "specialist", "junior", "lead",
+                       "manager", "intern", "coop", "summer", "analyst"}]
 
         best_hm = None
         best_recruiter = None
@@ -156,7 +175,7 @@ def search_company_contacts_via_hunter(company_name: str, role_title: str = "") 
             email = item.get("value")
             score = item.get("confidence", 0)
 
-            if not email or not fname:
+            if not email or not fname or not is_valid_email(email, target_company=company_name):
                 continue
 
             contact_obj = {
@@ -168,21 +187,23 @@ def search_company_contacts_via_hunter(company_name: str, role_title: str = "") 
                 "confidence": score
             }
 
-            # Check Recruiter
+            # Check Recruiter first (takes priority over HM check)
             if any(rk in pos or rk in dept for rk in recruiter_keywords):
                 if not best_recruiter or score > best_recruiter.get("confidence", 0):
                     best_recruiter = contact_obj
+                continue  # Don't double-count as HM
 
-            # Check Hiring Manager
-            is_leader = any(lk in pos for lk in hm_keywords) or dept in ["management", "executive", "it", "product"]
-            matches_role_domain = any(rt in pos or rt in dept for rt in role_terms) if role_terms else True
-
-            if is_leader and not any(rk in pos for rk in recruiter_keywords):
-                if matches_role_domain:
-                    if not best_hm or score > best_hm.get("confidence", 0):
-                        best_hm = contact_obj
-                elif not best_hm:
-                    best_hm = contact_obj
+            # Check Hiring Manager via tiered scoring
+            hm_bonus = max(
+                (bonus for kw, bonus in HM_TITLE_SCORES.items() if kw in pos),
+                default=0
+            )
+            if hm_bonus:
+                effective_score = score + hm_bonus
+                if role_terms and any(rt in pos or rt in dept for rt in role_terms):
+                    effective_score += 20
+                if not best_hm or effective_score > (best_hm.get("confidence", 0)):
+                    best_hm = {**contact_obj, "confidence": effective_score}
 
         return {
             "hiring_manager": best_hm,
@@ -192,6 +213,7 @@ def search_company_contacts_via_hunter(company_name: str, role_title: str = "") 
     except Exception as e:
         print(f"Error querying Hunter.io domain search: {e}")
         return {"hiring_manager": None, "recruiter": None}
+
 
 # --- Custom Agent Tools for Google Antigravity SDK ---
 
@@ -204,10 +226,10 @@ def find_contact_email(first_name: str, last_name: str, company_name: str) -> st
         company_name: The name of the company they work at.
     """
     email, score = find_email_via_hunter(first_name, last_name, company_name)
-    if email:
+    if email and is_valid_email(email, target_company=company_name):
         return email
     else:
-        return f"ERROR: Could not resolve professional email for {first_name} {last_name} at {company_name}."
+        return f"ERROR: Could not resolve valid professional email for {first_name} {last_name} at {company_name}."
 
 def get_tailored_resume_for_job(company_name: str, role: str = "") -> str:
     """Finds the custom-tailored resume PDF for a target company and role in Resume/output/.
@@ -216,7 +238,7 @@ def get_tailored_resume_for_job(company_name: str, role: str = "") -> str:
         company_name: The name of the target company.
         role: Optional role/title applied to.
     """
-    pdf_path = find_tailored_resume(company_name, role)
+    pdf_path, _ = load_verified_packet(company_name, role)
     if pdf_path and os.path.exists(pdf_path):
         return pdf_path
     return "ERROR: Tailored resume PDF not found."
@@ -233,15 +255,26 @@ def save_gmail_draft(to_email: str, subject: str, body_text: str, attachment_pat
         role: Target role/title (used for auto resume resolution).
     """
     try:
-        resolved_attachment = attachment_path
-        if not resolved_attachment or resolved_attachment.strip().lower() == "auto":
-            resolved_attachment = find_tailored_resume(company_name, role)
+        cleaned_to, err = sanitize_and_validate_email(to_email, target_company=company_name)
+        if not cleaned_to:
+            return f"ERROR: Invalid recipient email '{to_email}': {err}"
+        to_email = cleaned_to
+
+        contact_verification(to_email, target_company=company_name)
+        resolved_attachment, resume_data = load_verified_packet(company_name, role)
+        if attachment_path and attachment_path.strip().lower() != 'auto' and Path(attachment_path).resolve() != Path(resolved_attachment):
+            raise ValueError('Attachment must match the validated company/role packet.')
+        import sys
+        sys.path.insert(0, str(BASE_DIR.parent / 'Resume'))
+        from evidence import validate_outreach_evidence
+        validate_outreach_evidence(body_text, resume_data, role)
 
         draft = create_gmail_draft(
             to_email=to_email,
             subject=subject,
             body_text=body_text,
-            attachment_path=resolved_attachment
+            attachment_path=resolved_attachment,
+            idempotency_key=f"{application_operation_key(company_name, role)}:touch1:{to_email.lower()}"
         )
         if draft:
             attach_msg = f" [Attached: {os.path.basename(resolved_attachment)}]" if resolved_attachment else " [No attachment]"
@@ -286,45 +319,49 @@ def update_contact_status(first_name: str, last_name: str, company_name: str, st
         email: Email address of the contact (optional).
         resume_path: Path of the attached resume PDF (optional).
     """
+    if email and not is_valid_email(email, target_company=company_name, allow_placeholders=True):
+        return f"ERROR: Contact email '{email}' failed validation."
+
+    import io
+    from reliability_store import store_lock, atomic_write
     csv_file = BASE_DIR / "contacts.csv"
-    if not csv_file.exists():
-        return "ERROR: contacts.csv does not exist."
-        
-    contacts = []
-    updated = False
-    clean_fn = first_name.strip().lower()
-    clean_ln = last_name.strip().lower()
-    clean_comp = company_name.strip().lower()
-
-    with open(csv_file, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        fieldnames = reader.fieldnames
-        for row in reader:
-            row_fn = row.get("First Name", "").strip().lower()
-            row_ln = row.get("Last Name", "").strip().lower()
-            row_comp = row.get("Company", "").strip().lower()
-
-            fn_match = (row_fn == clean_fn)
-            ln_match = (not clean_ln) or (row_ln == clean_ln)
-            comp_match = (row_comp == clean_comp or clean_comp in row_comp)
-
-            if fn_match and ln_match and comp_match and not updated:
-                row["Status"] = status
-                if email:
-                    row["Email"] = email
-                if resume_path:
-                    row["Resume Path"] = resume_path
-                updated = True
-            contacts.append(row)
-            
-    if updated:
-        with open(csv_file, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
+    try:
+        with store_lock(csv_file):
+            if not csv_file.exists():
+                return "ERROR: contacts.csv does not exist."
+            original = csv_file.read_text(encoding='utf-8')
+            reader = csv.DictReader(io.StringIO(original), strict=True)
+            headers = reader.fieldnames
+            required = {'First Name', 'Last Name', 'Company', 'Status'}
+            required.update({'Email'} if email else set())
+            required.update({'Resume Path'} if resume_path else set())
+            if not headers or len(set(headers)) != len(headers) or not required.issubset(headers):
+                raise ValueError('Invalid or duplicate contact CSV headers.')
+            rows = list(reader)
+            if any(None in row or any(value is None for value in row.values()) for row in rows):
+                raise ValueError('Malformed contact CSV row; data was preserved.')
+            norm = lambda value: value.strip().casefold()
+            matches = [row for row in rows if norm(row['First Name']) == norm(first_name)
+                       and (not last_name.strip() or norm(row['Last Name']) == norm(last_name))
+                       and norm(row['Company']) == norm(company_name)]
+            if len(matches) != 1:
+                raise ValueError('Ambiguous contact match.' if matches else 'Contact not found in contacts.csv.')
+            row = matches[0]
+            row['Status'] = status
+            if email:
+                row['Email'] = email
+            if resume_path:
+                row['Resume Path'] = resume_path
+            content = io.StringIO(newline='')
+            writer = csv.DictWriter(content, fieldnames=headers)
             writer.writeheader()
-            writer.writerows(contacts)
+            writer.writerows(rows)
+            atomic_write(csv_file.with_suffix('.csv.bak'), original)
+            atomic_write(csv_file, content.getvalue())
         return f"SUCCESS: Updated contact {first_name} {last_name} at {company_name} status to: {status}"
-    else:
-        return f"ERROR: Contact {first_name} {last_name} at {company_name} not found in contacts.csv."
+    except (OSError, ValueError, csv.Error) as exc:
+        return f"ERROR: {exc}"
+
 
 import datetime
 
@@ -344,8 +381,8 @@ def calculate_business_days_ahead(start_date: Optional[datetime.date] = None, da
 def calculate_touch_schedule(creation_date: Optional[datetime.date] = None) -> Dict[str, Any]:
     """
     Calculates standard Touch 1 and Touch 2 schedule:
-      - Touch 1: Next business day at 9:00 AM (skipping weekends).
-      - Touch 2: 2 business days after Touch 1 send at 9:03 AM.
+      - Touch 1: Next business day at 9:03 AM (skipping weekends).
+      - Touch 2: 2 business days after Touch 1 send at 9:06 AM.
     """
     if creation_date is None:
         creation_date = datetime.date.today()
@@ -355,13 +392,14 @@ def calculate_touch_schedule(creation_date: Optional[datetime.date] = None) -> D
     
     return {
         "touch1_date": touch1_date,
-        "touch1_scheduled_send": f"{touch1_date.strftime('%Y-%m-%d')} 09:00 AM",
-        "touch1_formatted": f"{touch1_date.strftime('%A, %B %d, %Y')} at 9:00 AM",
+        "touch1_scheduled_send": f"{touch1_date.strftime('%Y-%m-%d')} 09:03 AM",
+        "touch1_formatted": f"{touch1_date.strftime('%A, %B %d, %Y')} at 9:03 AM",
         "touch2_date": touch2_date,
         "touch2_due_date": str(touch2_date),
-        "touch2_send_time": "09:03 AM",
-        "touch2_formatted": f"{touch2_date.strftime('%A, %B %d, %Y')} at 9:03 AM"
+        "touch2_send_time": "09:06 AM",
+        "touch2_formatted": f"{touch2_date.strftime('%A, %B %d, %Y')} at 9:06 AM"
     }
+
 
 # --- Single Email Drafting ---
 

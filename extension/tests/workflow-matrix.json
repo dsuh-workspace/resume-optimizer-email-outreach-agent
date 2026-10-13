@@ -1,0 +1,120 @@
+[
+  {
+    "id": "contact_email",
+    "label": "Email address",
+    "type": "email",
+    "expected": "sample@example.test"
+  },
+  {
+    "id": "phone",
+    "label": "Phone number",
+    "type": "tel",
+    "expected": "202-555-0123"
+  },
+  {
+    "id": "linkedin",
+    "label": "LinkedIn URL",
+    "type": "url",
+    "expected": "https://linkedin.com/in/sample"
+  },
+  {
+    "id": "github",
+    "label": "GitHub URL",
+    "type": "url",
+    "expected": "https://github.com/sample"
+  },
+  {
+    "id": "address",
+    "label": "Street address",
+    "type": "text",
+    "expected": "123 Example Street"
+  },
+  {
+    "id": "city",
+    "label": "City",
+    "type": "text",
+    "expected": "Berkeley"
+  },
+  {
+    "id": "state",
+    "label": "State",
+    "type": "text",
+    "expected": "California"
+  },
+  {
+    "id": "postal_code",
+    "label": "Postal code",
+    "type": "text",
+    "expected": "94704"
+  },
+  {
+    "id": "upload_resume",
+    "label": "Resume",
+    "type": "file",
+    "expected": "resume.pdf"
+  },
+  {
+    "id": "job_1_company",
+    "label": "Company",
+    "type": "text",
+    "expected": "Acme",
+    "initial": "Acme",
+    "employment": 1
+  },
+  {
+    "id": "job_1_role",
+    "label": "Job title",
+    "type": "text",
+    "expected": "Consultant",
+    "initial": "",
+    "employment": 1
+  },
+  {
+    "id": "job_1_start",
+    "label": "Start date year",
+    "type": "number",
+    "expected": "2020",
+    "initial": "",
+    "employment": 1
+  },
+  {
+    "id": "job_1_end",
+    "label": "End date year",
+    "type": "number",
+    "expected": "2021",
+    "initial": "",
+    "employment": 1
+  },
+  {
+    "id": "job_2_company",
+    "label": "Company",
+    "type": "text",
+    "expected": "Beta",
+    "initial": "Beta",
+    "employment": 2
+  },
+  {
+    "id": "job_2_role",
+    "label": "Job title",
+    "type": "text",
+    "expected": "Analyst",
+    "initial": "",
+    "employment": 2
+  },
+  {
+    "id": "job_2_start",
+    "label": "Start date year",
+    "type": "number",
+    "expected": "2022",
+    "initial": "",
+    "employment": 2
+  },
+  {
+    "id": "job_2_end",
+    "label": "End date year",
+    "type": "number",
+    "expected": "2023",
+    "initial": "",
+    "employment": 2
+  }
+]

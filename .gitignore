@@ -77,3 +77,35 @@ Thumbs.db
 *.swo
 *~
 save_*.py
+
+# Reliability state, review previews, and local backups
+.draft_registry.json*
+applications.json.bak*
+backups/
+applications.json.lock
+logs/
+output/reliability-preview/
+.extension_access.json*
+.application_answers.json*
+extension/test-results/
+
+# ApplyPilot private progress, jobs and launcher logs
+.applypilot_state.json*
+.applypilot.log
+
+.applypilot_startup*
+
+# Local autofill diagnostics (no answer values)
+.applypilot_diagnostics.json*
+.applypilot_interpretations.json*
+
+# Private contact recovery and worker ownership
+Emails/contacts.csv.*
+.applypilot_worker.lock
+
+# Local job-search materials, caches, and working notes
+Resume/jd_cache/
+job_descriptions/
+Workspace/
+audit_report_*.txt
+GREENHOUSE_RELIABILITY_REPORT.txt

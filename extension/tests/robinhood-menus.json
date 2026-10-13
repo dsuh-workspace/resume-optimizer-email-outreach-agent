@@ -1,0 +1,8 @@
+[
+  {"id":"disability","label":"Disability Status","options":["Yes, I have a disability","No, I don’t have a disability","I do not want to answer"],"expected":"No, I don’t have a disability"},
+  {"id":"gender","label":"What gender do you identify as?","options":["Cisgender man","Cisgender woman","Non-binary","I do not want to answer"],"explicit":"Cisgender man"},
+  {"id":"race","label":"I identify my ethnicity as","options":["East Asian","South Asian","Southeast Asian","White","I do not want to answer"],"explicit":"East Asian"},
+  {"id":"veteran","label":"Military Status","options":["I have never served in the military","I am a protected veteran","I am a veteran, but not a protected veteran","I do not want to answer"],"explicit":"I have never served in the military"},
+  {"id":"robinhood_history","label":"Have you ever worked for Robinhood as an employee, intern or contractor? Note that providing false or misleading information may result in disqualification from the hiring process.*","options":["I have never worked at Robinhood","I am a current employee","I am a former employee","I am a former intern","I am a former contractor"],"expected":"I have never worked at Robinhood"},
+  {"id":"degree","label":"Degree","options":["Bachelors","Bachelor’s Degree","Master’s Degree","Doctorate"],"expected":"Bachelor’s Degree"}
+]

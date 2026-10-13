@@ -1,0 +1,280 @@
+ApplyPilot 0.7.3 — live-structure regression additions, 2026-10-05
+
+Outside-label dropdown validation inputs:
+- Synthetic reproduction initially failed; fixed scanner excludes anonymous helpers.
+- One education group survives helper removal; graduation year remains retained.
+- Separately labelled inputs and ambiguous wrappers remain distinct.
+
+Compressed country selection:
+- Retention checks require both the explicit US flag and +1.
+- Canadian or missing flags cannot establish United States.
+- Later flag changes invalidate preservation; dial code alone is insufficient.
+- Loaded Robinhood fixture checks both displayed +1 and actual flag identity.
+
+The Python suite includes an opt-in isolated Chrome regression under
+COPILOT_BROWSER_TESTS=1. Existing history below describes prior coverage.
+Personal live-page evidence is kept outside the repository.
+
+ApplyPilot 0.7.1 — six remaining autofill cases, 2026-10-05
+
+Scope and provenance:
+- No live application filling, upload or submission was used for this release.
+- robinhood-menus.json records the task's representative six-menu cases; unknown
+  live menu inventories are not claimed verified. All applicants/profile data
+  in tests are synthetic. The earlier 0.7.0 inspection record is preserved below.
+
+Verification:
+- Full Python suite: 188 tests, zero failures/errors. Its one opt-in loopback
+  HTTP security test also passed separately with COPILOT_HTTP_TESTS=1.
+- Core mapping: 25 tests passed. Profile policy and worker suites passed,
+  including exact/approved/generic degree ranking, disabled and duplicate choices,
+  expected versus completed degrees, two schools, repeated schools, disclosure
+  negative cases, scoped answers, removed choices and fresh Python alternatives.
+- Browser DOM suites passed: controls, Greenhouse, Lever, actual panel. Added
+  already-open menus without search/toggle, inert clicks/highlights/search text,
+  helper disappearance, school-first rebuilding, changed/reordered/duplicate
+  schools and ambiguous replacements. Existing delayed/search-only/concurrent
+  edit, navigation/context, opt-out and retained-value checks remain exercised.
+- All 15 loaded-extension scenarios passed: Greenhouse robinhood, modern, alias,
+  missing-school, legacy, classic, challenge, dependent-rerender, conditional,
+  extension-reload, late; Lever modern, delayed, rerender, workflow.
+  Robinhood exercises 57 fields through panel -> worker -> native companion ->
+  page, six menu cases, explicit company/question saves, panel restoration,
+  helper removal, school-triggered degree rebuild, partial success and retries.
+- Loaded-extension lifecycle passed: cold native-host startup, background job
+  recovery, actual injection, upload acknowledgement, partial failure, full Chrome
+  restart with restored answers, and revocation preventing native reconnection.
+- JavaScript syntax checks and tracked-file whitespace checks passed.
+
+Execution notes:
+- Sandboxed Chrome startup initially timed out/exited; browser runs were completed
+  successfully outside the sandbox with approval, using disposable profiles and
+  intercepted/local pages. No browser integration check remains blocked.
+- Lifecycle test used --skip-assets: unrelated icon rasterization was deliberately
+  skipped to preserve the existing assets. Runtime/lifecycle checks all ran.
+- These checks establish retained local control state, not employer-server save
+  or live-site compatibility with every future dropdown implementation.
+
+Rollout:
+- Manifest/content version 0.7.1; mismatched injected code requires a refresh.
+- Restart companion, reload extension, preserve unsaved entries and refresh the
+  application tab before reopening. No preferences migration or installation of
+  a login/background task is involved.
+
+--- Previous release record ---
+
+ApplyPilot 0.7.0 — live-informed control handling, 2026-10-05
+
+Read-only live inspection:
+- Robinhood Greenhouse: https://job-boards.greenhouse.io/robinhood/jobs/8198198
+  The saved 0.6.0 attempt had 15 list_missing failures, one phone rejection and
+  one replaced upload input. Inspection showed the formatted phone was present
+  and a filename receipt plus Remove file button confirmed an attachment.
+  Observed select-shell/select__control/select__input containers, dynamically
+  assigned aria-controls, react-select listbox/options, US country label +1,
+  file-upload wrapper, and exact conditional question wording.
+- Lever CIC: https://jobs.lever.co/cic/d28988a7-1ae5-4099-810a-ecf635ccf14e/apply
+  Observed native fields/selects, nested labels, sibling radio question labels,
+  filename receipt and resume-upload failure/working markers. Its location input
+  has a separate selectedLocation token, and is explicitly manual until supported.
+- Only menus were opened/closed. No answers, uploads, Next, or Submit were used.
+  Fixtures retain synthetic data rather than personal page content.
+
+Verification:
+- Full Python suite: 187 tests, zero failures/errors. The opt-in loopback HTTP
+  security test passed separately.
+- 25 core mapping tests, profile-policy matrix, and worker security tests passed.
+- Browser DOM suites: controls, Greenhouse, Lever, and actual panel passed.
+  New cases cover mousedown activation, select-shell, external ARIA menus,
+  delayed options, duplicate ambiguity, concurrent user searches, temporary
+  panel search cleanup, country-before-phone, format-only equivalence, unknown
+  country-code rejection, changed digits, later clearing of an unselected field,
+  removed upload inputs, errors/late errors/missing receipts, conditional No,
+  Lever sibling radio labels and token-location manual handling.
+  Panel checks cover actual option loading, explicit use-once selection,
+  non-applicable explanations, and deliberate opt-outs during failed-field retry.
+- All 14 loaded-extension scenarios passed: Greenhouse modern, alias, missing-school,
+  legacy, classic, challenge, dependent-rerender, conditional, extension-reload,
+  late; Lever modern, delayed, rerender, workflow. Modern variants have 57 fields
+  and reproduce mouse-driven external menus, committed selection displays,
+  phone formatting and replacement of the upload input by a receipt.
+- Final review reran Greenhouse modern, alias, legacy, missing-school, classic,
+  and challenge after the retained-value reporting change; all six passed.
+- Full loaded-extension lifecycle passed: cold companion startup, 32-second answer
+  recovery, uploads, partial rejection, full browser restart, revocation.
+- Sandboxed remote-debugging Chrome startup timed out; the integration matrix
+  and lifecycle checks passed with approved execution permission. No check waived.
+
+Limits and activation:
+- Browser acceptance is not proof of employer-server submission or persistence.
+- Missing/ambiguous facts, incompatible answer options, Lever token-location
+  widgets, additional history rows and manual attestations remain user actions.
+- Companion restarted with no active preparation jobs; health verified.
+- Browser security policy blocked chrome://extensions. User must reload ApplyPilot
+  and refresh application tabs after preserving unsaved entries. No workaround
+  was used and no live page was refreshed.
+
+ApplyPilot 0.6.0 — selection, dropdown recovery and retained values, 2026-10-05
+
+Final verification passed: 186 Python tests (one opt-in HTTP skip, passed
+separately), core mapping, profile policy, worker, synthetic Greenhouse/Lever DOM
+and real panel suites. All 12 actual-extension scenarios passed on the final code:
+Greenhouse alias, missing-school, legacy, classic, challenge, dependent-rerender,
+conditional, extension-reload, late; Lever delayed, rerender, workflow.
+The fixed 40-field matrix is independent of mapper eligibility. The Lever
+workflow extends it to 57 fields, including contact/address, PDF upload and two
+separate employment entries/dates. Each run verifies retained DOM values and
+zero Next/Submit actions. Diagnostics account for every discovered field.
+Cold companion startup, 32-second answer recovery, upload acknowledgement,
+full Chrome restart and revocation checks also passed.
+
+Confirmed baseline: production progress had 24 legacy unchecked rows. Existing
+Berkeley graduation preference was May 2028; neither preferences nor master
+profile was changed. Selection-v2 migration occurs on next panel use.
+Read-only live inspection was unavailable due to a Computer Use client mismatch;
+Daniel requested deferring its repair. No live application was filled. Real-use
+confirmation on Robinhood and Lever remains pending.
+
+Reproduce: scripts/test_autofill_matrix.py (isolated Chrome profiles; requires
+Chrome execution permission on this Mac). Runtime.reload from the headless side
+panel stalled Chrome's debugging channel; the successful extension-reload test
+uses Chrome's unpacked-extension loader, waits for the replacement worker, and
+reacquires Chrome tab IDs. Initial harness races were corrected, not waived.
+See ../RELEASE_NOTES.md for behavior, limits, reload and rollback instructions.
+
+ApplyPilot 0.5.0 — relationship/history, dates and consent, 2026-10-05
+
+Cross-company personal-relationship defaults are explicit preferences. Work-for
+and work-with questions check the full Python master profile, including omitted
+experiences; absent employers yield No only with exhaustive-list authorization.
+Unknown employers, unavailable profiles and unsupported compound questions have
+specific unresolved reasons. Company answers require company and exact wording.
+Public Robinhood wording is in robinhood-questions.json; fixture answers and
+applicant identities are synthetic. Production preferences and backups are ignored.
+
+Date recognition uses structure and associated controls without depending on
+education CSS classes. Composite dropdown auxiliaries do not create duplicate
+fields. Separate employment entries retain their own dates. Standalone recognized
+recruitment/demographic processing consent requires saved authorization, stable
+wording and retained checked state. Mixed agreements remain manual.
+
+Verification:
+- Full Python suite: 185 tests, zero failures/errors. The one opt-in HTTP test
+  passed separately with loopback permission.
+- 24 core mapping tests, expanded 40-field mapping matrix, and worker tests passed.
+- Synthetic DOM and actual panel tests passed on Greenhouse and Lever, including
+  retained independent education/employment dates, unmapped dates, duplicates,
+  unauthorized/changed consent and already-checked boxes.
+- Actual unpacked extension 40-field matrix passed for Greenhouse immediate,
+  delayed, rerender and button-dropdown challenge; Lever immediate, delayed and
+  rerender. Independent DOM inspection before/after selective failure recovery
+  confirmed expected values and zero Next/Submit actions.
+- Cold companion startup, 32-second job/panel recovery, browser restart,
+  upload acknowledgement and revocation regression passed in a disposable copy.
+- Chrome startup was initially sandbox-blocked; browser checks passed after
+  execution permission. No live application was filled and no model call made.
+
+Limits: unusual widgets and unrecognized consent wording remain manual. Missing
+calendar days are not invented. Qualified employment types need profile evidence.
+Retained browser values do not prove that an employer server later saved them.
+
+Previous verification history follows.
+
+ApplyPilot 0.4.1 follow-up — no mandatory review, 2026-10-05
+
+Clear saved answers and selected validated resumes require no review step.
+Requested written answers validate automatically at fill time; failed or stale
+answers are withheld with an explanation while clear fields continue. Unknown
+questions are listed under Needs your input or written answers. Preview remains
+optional. Existing values are preserved; the user still navigates and submits.
+
+Verification: Python 183 tests with no failures/errors (one opt-in HTTP skip,
+checked separately); mapping, policy and worker regressions passed. Synthetic
+Greenhouse/Lever browser tests and updated panel tests passed, including edits
+during validation, partial filling, ambiguity reporting, restored answers,
+optional preview, job recovery and stale-tab protection. The real-extension
+29-field matrix passed on Greenhouse immediate, Greenhouse button-dropdown
+challenge, and Lever delayed forms, with
+no resume or answer approval clicks, persistent diagnostics and selective retry.
+The full cold-start/job-recovery/browser-restart/revocation regression passed.
+Earlier seven-variant adapter coverage and live-model checks are recorded below;
+those runs tested 0.4.0's former approval flow. No live applications were filled.
+
+ApplyPilot 0.4.0 autofill verification — 2026-10-05
+
+Scope and fixed acceptance criteria
+Hosted Greenhouse and Lever. The 29-field matrix is acceptance-matrix.json.
+It covers explicit identity, country, authorization, current/future/inverted
+sponsorship, school autocomplete, degree, major, separate start/end month/year,
+race, Hispanic identification, gender, disability, protected and general veteran
+status, checkbox disclosures, approved text-input and textarea answers, preserved
+email, and intentional manual cases (foreign authorization, completed degree,
+unknown calendar day, consent and signature).
+Expected results were set before the end-to-end runs. Mandatory supported fields
+could not be counted as passing merely by becoming manual.
+
+Public form observations (read only; no public forms filled)
+Greenhouse: https://job-boards.greenhouse.io/accelschools/jobs/7660773003
+Observed split school/degree/discipline and month/year controls, authorization,
+voluntary disclosures, and separate consent/attestation questions.
+Lever: https://jobs.lever.co/nomihealth/ae785bbe-22df-4ea9-8159-a807175c0f85/apply
+Observed sponsorship/authorization radios, short responses, demographic selects,
+and ethnicity checkbox groups. Fixtures independently reproduce these patterns;
+they are not complete copies or certifications of these employers' applications.
+
+Results
+- Python suite: 182 tests, zero failures/errors; one opt-in HTTP test skipped in
+  that suite, then run separately and passed.
+- Existing mapping suite: 24 tests passed. Expanded fixed-matrix mapping passed,
+  including missing facts, incompatible options, country boundaries and ambiguity.
+- Worker sender/origin/route/tab/revision/revocation checks passed.
+- Synthetic browser regressions: 23 assertions each on Greenhouse and Lever;
+  side-panel approval, editing, cancellation/recovery and stale-tab tests passed.
+- Actual unpacked extension: all 29 independent page-value assertions passed
+  before and after recovery in each of Greenhouse immediate/delayed/rerender and
+  Lever immediate/delayed/rerender. Separate Greenhouse button-dropdown challenge
+  also passed. All seven runs used fresh isolated Chrome profiles and fixture
+  backend data, intercepted portal requests, and synthetic candidate preferences.
+- Each acceptance run forced first and last name to fail, verified diagnostics
+  exclude answer values, reloaded into a new panel document, rescanned, selected
+  only the failed empty fields, and verified their recovery. Later email edits
+  remained intact. Restored written answers required fresh approval.
+- Full original loaded-extension regression passed in disposable code copy
+  /private/tmp/applypilot-coverage-copy-su3hwpkj: cold native startup, toolbar
+  permissions, PDF/evidence selection, upload acknowledgement, 32-second job
+  across panel restart, full Chrome restart, revocation and native reconnect denial.
+- No Next clicks, submissions, production application fills or Gmail operations.
+
+Issues actually discovered and corrected
+A dropdown replaced its input when opened; the adapter now reconnects only to
+one replacement with an identical verified fingerprint. Delayed and replacement
+control tests verified the fix. A test reload race initially observed the old
+panel; a document marker now proves diagnostics load in a new panel instance.
+The real-model smoke batch covered three synthetic questions and character limits
+180/300/450. All responses passed citation/metric/length validation. Manual review
+found the third response overstated listed coursework as completed. The prompt
+was tightened and just that question rerun: it now describes pursuing the degree
+and coursework including Analytics. All three reviewed final responses were
+relevant and grounded in the supplied synthetic evidence. Four AI generations
+were used in total. No real candidate profile or disclosure answers were sent.
+
+Artifacts and reproducibility
+The test commands are in ../README.md. Per-run logs are in /private/tmp using
+applypilot-* names; these are transient. The acceptance matrix and scripts are
+retained here for repeatable checks. Live AI smoke is explicitly invoked and
+excluded from offline regressions. Existing loaded-extension regression renders
+icons, so it was executed in an isolated code copy; the new acceptance runner
+only writes temporary fixture data.
+
+Limits
+No claim of universal employer widget coverage. Custom sites, frames, ambiguous
+options, missing facts, exact days not recorded, complete work history, consent,
+attestations and CAPTCHA can remain manual. Additional education rows must be
+added on the employer page before rescanning. Checkbox-group undo, uploads and
+custom-dropdown undo require manual restoration. Use-once answers last only in
+the current panel session. Disclosures and factual answers are user-provided,
+not independently verified. Listed source evidence and numeric validation cannot
+prove every AI paraphrase. Version 0.4.1 removes approval at the user's request; it does not strengthen those semantic guarantees. Retained page values do not
+prove the employer's server has saved an application. The two original failures
+were not recoverable retrospectively; the new diagnostic history addresses future
+attempts without storing answer values.

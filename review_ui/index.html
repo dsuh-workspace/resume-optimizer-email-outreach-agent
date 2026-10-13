@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="review-token" content="__REVIEW_TOKEN__">
+  <title>Application review · Daniel Suh</title>
+  <link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+<img src="/logo.svg" width="40" height="40" alt="ApplyPilot" style="margin:16px 24px 0">
+  <header class="topbar"><div class="brand"><span class="mark">DS</span><div><strong>Application review</strong><span class="subtle">Your experience. Your final say.</span></div></div><span class="local"><i></i> Local workspace</span></header>
+  <div class="layout">
+    <aside class="sidebar"><div class="sidebar-title"><h2>Saved packets</h2><button id="refresh" class="quiet" aria-label="Refresh saved packets">Refresh</button></div><label class="search-label" for="search">Find a company or role</label><input id="search" type="search" placeholder="Search applications…"><nav id="packets" aria-label="Application packets"></nav></aside>
+    <main>
+      <details class="skills"><summary>Connect ApplyPilot</summary><p>Load the <code>extension/</code> folder in Chrome, then paste the extension ID from its side panel here.</p><label for="extension-id">Extension ID</label><input id="extension-id" autocomplete="off" maxlength="32"><button id="pair-code">Create 5-minute pairing code</button><button id="revoke-extension">Disconnect all extensions</button><p id="pair-status" role="status"></p></details>
+      <div id="welcome" class="welcome"><span class="eyebrow">MAKE IT YOURS</span><h1>Review your next opportunity.</h1><p>Select a saved packet to see the resume, the evidence behind each bullet, and the outreach prepared alongside it.</p></div>
+      <section id="workspace" hidden>
+        <div class="heading"><div><span id="company" class="eyebrow"></span><h1 id="role"></h1><p id="version" class="subtle"></p></div><span id="state" class="pill"></span></div>
+        <div id="notices"></div>
+        <div class="workgrid">
+          <section class="preview"><div class="panel-heading"><h2>Resume preview</h2><a id="pdf-link" target="_blank" rel="noopener">Open PDF ↗</a></div><p class="preview-note">Preview shows the saved version. Regenerate to see your edits.</p><iframe id="pdf" title="Saved resume PDF"></iframe><p id="no-pdf" hidden>No PDF is available for this packet.</p></section>
+          <section class="review"><div class="tabs" role="tablist" aria-label="Review sections"><button id="tab-bullets" role="tab" aria-selected="true" aria-controls="bullets-panel" data-tab="bullets">Bullet evidence</button><button id="tab-outreach" role="tab" aria-selected="false" aria-controls="outreach-panel" data-tab="outreach" tabindex="-1">Contacts & email</button></div>
+            <div id="bullets-panel" role="tabpanel" aria-labelledby="tab-bullets"><div class="intro"><h2>Make each bullet sound like you.</h2><p>Compare the rewrite with its verified source. Numeric checks run when you save; review the meaning yourself.</p></div><div id="bullets"></div><details class="skills"><summary>Skills and their evidence</summary><div id="skills"></div></details></div>
+            <div id="outreach-panel" role="tabpanel" aria-labelledby="tab-outreach" hidden><div class="intro"><h2>The people and the message.</h2><p>These are locally saved verification records and draft creation snapshots. Later Gmail edits are not reflected here.</p></div><div id="contacts"></div><div id="messages"></div><details id="notes-wrap" class="skills"><summary>Full saved review notes</summary><pre id="notes"></pre></details></div>
+          </section>
+        </div>
+        <footer class="savebar"><div><strong id="edit-count">No unsaved changes</strong><span class="subtle">Saving creates a new version. Existing Gmail attachments stay unchanged.</span></div><div class="actions"><button id="discard" class="quiet" disabled>Discard edits</button><button id="save" class="primary" disabled>Save & regenerate PDF</button></div></footer>
+      </section>
+      <div id="status" role="status" aria-live="polite"></div>
+    </main>
+  </div>
+</body>
+</html>

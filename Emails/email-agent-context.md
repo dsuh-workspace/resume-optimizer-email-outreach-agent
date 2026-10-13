@@ -19,7 +19,7 @@ Keep `memory.md` current and updated in place.
 ## Operating Mode
 - **Always draft — never send automatically.** Prepare the email as a Gmail draft and present it for review and approval before it is sent.
 - **Strictly for Post-Job-Application Follow-ups:** Every outreach is directed to hiring managers, recruiters, or team leads after an application has been submitted.
-- **Tailored Resume Attachment:** Every application follow-up draft must attach the custom-tailored resume PDF corresponding to that specific company/role from the `Resume/output/` directory.
+- **Tailored Resume Attachment:** Every application follow-up draft must attach the custom-tailored resume PDF corresponding to that specific company/role from the `Resume/output/` directory, with validated source references and a matching PDF checksum.
 - **STRICT ZERO-HALLUCINATION & FAIL-FAST POLICY**: If ANY critical data, profile metric, file, contact, or API credential is missing or goes wrong, **NEVER fabricate, invent, or make assumptions**. Immediately HALT execution, report the exact missing requirement or error, and alert Daniel for clarification.
 
 ## Tone & Style
@@ -55,3 +55,8 @@ Always format subject lines using:
 
 ## Templates & Skills
 Templates and guidelines for post-job-application follow-ups live in `skills/Job Application Follow-up/SKILL.md`.
+
+## Reliability
+- Every discovered mailbox needs an explicit Hunter valid/deliverable verification with score >= 50. Direct user entries must be labeled user-provided. Never guess addresses.
+- Source numerical achievements from the attached resume, not an unrelated experience or another resume version.
+- A second draft is due two business days after Gmail confirms the first send, at 9:06 AM Pacific. Reply-check errors pause the sequence.

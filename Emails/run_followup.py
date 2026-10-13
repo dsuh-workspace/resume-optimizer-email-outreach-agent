@@ -5,7 +5,9 @@ import asyncio
 from pathlib import Path
 from agent import find_email_via_hunter, generate_email_draft_async
 from gmail_draft import create_gmail_draft
-from resume_finder import find_tailored_resume
+from reliability_store import application_operation_key
+from resume_finder import load_verified_packet
+from email_validator import contact_verification, validate_email, is_valid_email, sanitize_and_validate_email
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -19,6 +21,7 @@ async def main():
     parser.add_argument("--details", default="", help="Custom details or key JD points to emphasize")
     parser.add_argument("--resume", default="auto", help="Path to resume PDF file (optional, defaults to auto-finding tailored PDF from Resume/output/)")
 
+    parser.add_argument("--new-attempt", default="", metavar="LABEL")
     args = parser.parse_args()
 
     company = args.company
@@ -40,28 +43,24 @@ async def main():
         if not email:
             print(f"❌ Error: Could not find email via Hunter.io for {first_name} {last_name} at {company}.")
             sys.exit(1)
-        print(f"✅ Found email: {email} (Confidence: {score}%)")
+        valid, reason = validate_email(email, target_company=company)
+        if not valid:
+            print(f"❌ Error: Discovered email '{email}' failed validation ({reason}).")
+            sys.exit(1)
+        print(f"✅ Found verified valid email: {email} (Confidence: {score}%)")
     else:
-        print(f"📧 Using provided email: {email}")
+        clean_email_val, reason = sanitize_and_validate_email(email, target_company=company)
+        if not clean_email_val:
+            print(f"❌ Error: Provided email '{email}' is invalid ({reason}).")
+            sys.exit(1)
+        email = clean_email_val
+        print(f"📧 Using user-provided email: {email}")
 
-    # 2. Resolve custom tailored resume PDF
-    resume_path = None
-    if resume and resume.strip().lower() != "auto":
-        custom_p = Path(resume).expanduser().resolve()
-        if custom_p.exists():
-            resume_path = str(custom_p)
-            print(f"📎 Using specified resume: {resume_path}")
-        else:
-            print(f"⚠️ Warning: Specified resume path '{resume}' not found. Attempting auto-discovery...")
-            resume_path = find_tailored_resume(company, role)
-    else:
-        print(f"📂 Searching for tailored resume for '{company}' in Resume output folder...")
-        resume_path = find_tailored_resume(company, role)
-
-    if resume_path:
-        print(f"📎 Attached Resume: {os.path.basename(resume_path)}")
-    else:
-        print("⚠️ No resume found to attach. Proceeding without attachment.")
+    verification = contact_verification(email, user_provided=bool(args.email), target_company=company)
+    resume_path, resume_data = load_verified_packet(company, role)
+    if resume and resume.strip().lower() != 'auto' and Path(resume).expanduser().resolve() != Path(resume_path):
+        raise ValueError('Specified attachment must match the validated company/role packet.')
+    print(f"Contact source: {verification['source']}; checked {verification['checked_at']}")
 
     # 3. Draft Email Copy
     print("\n🧠 Drafting personalized follow-up email...")
@@ -69,7 +68,7 @@ async def main():
         recipient_name=f"{first_name} {last_name}",
         company_name=company,
         role=role,
-        additional_details=details,
+        additional_details=details + "\nUse only these attached resume achievements: " + str(resume_data.get("experiences", [])),
         resume_attached=bool(resume_path)
     )
 
@@ -86,9 +85,13 @@ async def main():
     print(body)
     print("-" * 65 + "\n")
 
+    sys.path.insert(0, str(BASE_DIR.parent / 'Resume'))
+    from evidence import validate_outreach_evidence
+    validate_outreach_evidence(body, resume_data, role)
+
     # 4. Create Gmail Draft
     print("📤 Staging Gmail draft (Draft-Only Mode)...")
-    draft = create_gmail_draft(to_email=email, subject=subject, body_text=body, attachment_path=resume_path)
+    draft = create_gmail_draft(to_email=email, subject=subject, body_text=body, attachment_path=resume_path, idempotency_key=f"{application_operation_key(company, role, args.new_attempt)}:touch1:{email.lower()}")
     if draft:
         print(f"✅ SUCCESS: Gmail draft staged successfully! Draft ID: {draft.get('id')}")
     else:

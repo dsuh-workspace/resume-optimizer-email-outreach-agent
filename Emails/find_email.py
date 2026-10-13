@@ -4,6 +4,7 @@ import requests
 from pathlib import Path
 from dotenv import load_dotenv
 from agent import get_company_domain
+from email_validator import validate_email, is_valid_email
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -41,8 +42,15 @@ def main():
             data = response.json()
             email = data.get("data", {}).get("email")
             score = data.get("data", {}).get("score")
+            verification = data.get("data", {}).get("verification") or {}
+            v_status = verification.get("status")
+
             if email:
-                print(f"EMAIL_FOUND:{email}:{score}")
+                is_valid, val_reason = validate_email(email, hunter_api_key=HUNTER_API_KEY, target_company=company_name)
+                if not is_valid or v_status == "invalid":
+                    print(f"EMAIL_INVALID: Discovered email '{email}' failed validation ({val_reason or 'verification invalid'})")
+                else:
+                    print(f"EMAIL_FOUND:{email}:{score}")
             else:
                 print(f"EMAIL_NOT_FOUND: Could not find email for {first_name} {last_name} at {domain}")
         elif response.status_code == 401:

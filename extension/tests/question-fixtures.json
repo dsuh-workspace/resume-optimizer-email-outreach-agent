@@ -1,0 +1,10 @@
+[
+  {"question":"What interests you about this position?","written":true},
+  {"question":"Describe your experience","written":true},
+  {"question":"Why Example?","written":true},
+  {"question":"Tell us about yourself","written":true},
+  {"question":"Additional information","written":true},
+  {"question":"Do you require sponsorship in Canada?","written":false},
+  {"question":"Are you authorized to work in the United States?","written":false},
+  {"question":"Start date?","written":false}
+]
